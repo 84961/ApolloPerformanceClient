@@ -1,4 +1,4 @@
-<app-toolbar (insertSpeaker)="onAddSpeaker($event)"></app-toolbar>
+<app-toolbar (insertSpeaker)="onAddSpeakerOptimistic($event)" (sortByIdDescending)="onSortByIdDescending()"></app-toolbar>
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-8">
@@ -9,11 +9,11 @@
               <div class="fw-bold">{{speaker.first}} {{speaker.last}} ({{speaker.id}})</div>
             </div>
             <div class="btn-group">
-              <button class="btn btn-outline-warning btn-sm me-2" (click)="toggleFavorite(+speaker.id)">
+              <button class="btn btn-outline-warning btn-sm me-2" (click)="toggleFavoriteOptimistic(+speaker.id)">
                 <i [class]="speaker.favorite ? 'fa fa-star' : 'fa fa-star-o'"></i>
                 Favorite
               </button>
-              <button class="btn btn-outline-danger btn-sm" (click)="deleteSpeaker(+speaker.id)">
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteSpeakerOptimistic(+speaker.id)">
                 <i class="fa fa-trash"></i>
                 Delete
               </button>

@@ -11,6 +11,7 @@ import { AddSpeakerModalComponent } from '../add-speaker-modal/add-speaker-modal
 })
 export class ToolbarComponent {
   @Output() insertSpeaker = new EventEmitter<{first: string, last: string, favorite: boolean}>();
+  @Output() sortByIdDescending = new EventEmitter<void>();
   @ViewChild(AddSpeakerModalComponent) modal!: AddSpeakerModalComponent;
 
   openModal() {
@@ -26,5 +27,10 @@ export class ToolbarComponent {
 
   onInsertSpeaker(data: {first: string, last: string, favorite: boolean}) {
     this.insertSpeaker.emit(data);
+  }
+
+  onSortByIdDescending()
+  {
+     this.sortByIdDescending.emit();
   }
 }

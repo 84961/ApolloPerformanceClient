@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { gql } from 'apollo-angular';
-import { Observable, map } from 'rxjs';
-import { Speaker, SpeakersResponse } from '../models/speaker.interface';
+import { Observable, map, tap } from 'rxjs';
+import { Speaker, SpeakerInput, SpeakersResponse } from '../models/speaker.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -64,11 +64,46 @@ export class SpeakerService {
     );
   }
 
-  addSpeaker(first: string, last: string, favorite: boolean): Observable<Speaker> {
+  addSpeaker(speaker:SpeakerInput): Observable<Speaker> {
+    const { first, last, favorite } = speaker;
     return this.apollo.mutate<{addSpeaker: Speaker}>({
       mutation: this.ADD_SPEAKER,
       variables: { first, last, favorite },
       refetchQueries: [{ query: this.GET_SPEAKERS }]
+    }).pipe(
+      map(result => result.data!.addSpeaker)
+    );
+  }
+
+
+  addSpeakerOptimistic(speaker: SpeakerInput): Observable<Speaker> {
+    return this.apollo.mutate<{addSpeaker: Speaker}>({
+      mutation: gql`
+        mutation AddSpeaker($first: String, $last: String, $favorite: Boolean) {
+          addSpeaker(speaker: { first: $first, last: $last, favorite: $favorite }) {
+            id
+            first
+            last
+            favorite
+          }
+        }
+      `,
+      variables: speaker,
+      update: (cache, { data }) => {
+        const existingData = cache.readQuery<{speakers: {datalist: Speaker[]}}>({
+          query: this.GET_SPEAKERS
+        });
+        
+        cache.writeQuery({
+          query: this.GET_SPEAKERS,
+          data: {
+            speakers: {
+              __typename: 'SpeakerResults',
+              datalist: [data!.addSpeaker, ...(existingData?.speakers.datalist || [])]
+            }
+          }
+        });
+      }
     }).pipe(
       map(result => result.data!.addSpeaker)
     );
@@ -84,6 +119,34 @@ export class SpeakerService {
     );
   }
 
+
+  toggleFavoriteOptimistic(id: number, speaker: Speaker): Observable<Speaker> {
+    return this.apollo.mutate<{toggleSpeakerFavorite: Speaker}>({
+      mutation: gql`
+        mutation ToggleSpeakerFavorite($speakerId: Int!) {
+          toggleSpeakerFavorite(speakerId: $speakerId) {
+            id
+            first
+            last
+            favorite
+          }
+        }
+      `,
+      variables: { speakerId: id },
+      optimisticResponse: {
+        toggleSpeakerFavorite: {
+          __typename: 'Speaker',
+          id: speaker.id,
+          first: speaker.first,
+          last: speaker.last,
+          favorite: !speaker.favorite
+        }
+      }
+    }).pipe(
+      map(result => result.data!.toggleSpeakerFavorite)
+    );
+  }
+
   deleteSpeaker(speakerId: number | string): Observable<Speaker> {
     const id = Number(speakerId);
     return this.apollo.mutate<{deleteSpeaker: Speaker}>({
@@ -94,4 +157,79 @@ export class SpeakerService {
       map(result => result.data!.deleteSpeaker)
     );
   }
+
+
+  deleteSpeakerOptimistic(id: number, speaker: Speaker): Observable<Speaker> {
+    return this.apollo.mutate<{deleteSpeaker: Speaker}>({
+      mutation: this.DELETE_SPEAKER,
+      variables: { speakerId: id },
+      optimisticResponse: {
+        deleteSpeaker: {
+          __typename: 'Speaker',
+          id: speaker.id,
+          first: speaker.first,
+          last: speaker.last,
+          favorite: speaker.favorite
+        }
+      },
+      update: (cache, { data }) => {
+        try {
+          const existingData = cache.readQuery<{speakers: {datalist: Speaker[]}}>({
+            query: this.GET_SPEAKERS
+          });
+  
+          if (existingData) {
+            const updatedList = existingData.speakers.datalist.filter(s => Number(s.id) != Number(id));
+            
+            cache.writeQuery({
+              query: this.GET_SPEAKERS,
+              data: {
+                speakers: {
+                  __typename: 'SpeakerResults',
+                  datalist: updatedList
+                }
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Cache update error:', error);
+        }
+      }
+      // Removed fetchPolicy: 'no-cache' to allow cache updates
+    }).pipe(
+      tap(response => console.log('Delete mutation response:', response)),
+      map(result => result.data!.deleteSpeaker)
+    );
+  }
+
+  sortSpeakersDescending(): void {
+    const cache = this.apollo.client.cache;
+    const existingData = cache.readQuery<{speakers: {datalist: Speaker[]}}>({
+      query: this.GET_SPEAKERS
+    });
+
+    if (existingData) {
+      cache.writeQuery({
+        query: this.GET_SPEAKERS,
+        data: {
+          speakers: {
+            __typename: 'SpeakerResults',
+            datalist: [...existingData.speakers.datalist].sort((a, b) => b.id - a.id)
+          }
+        }
+      });
+    }
+  }
+
+  watchSpeakers(): Observable<Speaker[]> {
+    return this.apollo.watchQuery<SpeakersResponse>({
+      query: this.GET_SPEAKERS,
+      fetchPolicy: 'cache-and-network', // Ensures immediate emission of cached data
+      nextFetchPolicy: 'cache-first'
+    }).valueChanges.pipe(
+      tap(response => console.log('GraphQL response:', response)), // Debug log
+      map(({ data }) => data.speakers.datalist)
+    );
+  }
+
 }

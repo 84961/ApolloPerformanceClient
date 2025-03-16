@@ -1,4 +1,7 @@
-export interface Speaker {
+export interface ParentType {
+  __typename?: string;
+}
+export interface Speaker extends ParentType {
     id: number;
     first: string;
     last: string;
@@ -11,3 +14,8 @@ export interface Speaker {
     };
   }
   
+  export interface SpeakerInput {
+    first: string; 
+    last: string;
+    favorite: boolean;
+  }
