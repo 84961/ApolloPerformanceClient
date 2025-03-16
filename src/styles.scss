@@ -1,0 +1,38 @@
+/* You can add global styles to this file, and also import other style files */
+.show-fav {
+    padding: 20px;
+  }
+  
+  .favbox {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .fav-clm {
+    h4 {
+      margin: 0;
+    }
+  }
+  
+  .action {
+    display: flex;
+    gap: 1rem;
+    
+    span {
+      cursor: pointer;
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+  
+  .orange {
+    color: orange;
+  }
+  
+  .red {
+    color: red;
+  }
+  

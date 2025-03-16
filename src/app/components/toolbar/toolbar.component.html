@@ -1,0 +1,10 @@
+<div class="toolbar">
+    <div class="add-speaker-form">
+      <input [ngModel]="first()" (ngModelChange)="first.set($event)" placeholder="First Name" />
+      <input [ngModel]="last()" (ngModelChange)="last.set($event)" placeholder="Last Name" />
+      <label>
+        <input type="checkbox" [ngModel]="favorite()" (ngModelChange)="favorite.set($event)" /> Favorite
+      </label>
+      <button (click)="handleAdd()">Add Speaker</button>
+    </div>
+  </div>
