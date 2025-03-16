@@ -6,16 +6,8 @@ import { AddSpeakerModalComponent } from '../add-speaker-modal/add-speaker-modal
   selector: 'app-toolbar',
   standalone: true,
   imports: [CommonModule, AddSpeakerModalComponent],
-  template: `
-    <div class="container my-4">
-      <div class="d-flex justify-content-end">
-        <button class="btn btn-primary" (click)="openModal()">
-          <i class="bi bi-plus-lg"></i> Add Speaker
-        </button>
-      </div>
-    </div>
-    <app-add-speaker-modal (insertSpeaker)="onInsertSpeaker($event)"></app-add-speaker-modal>
-  `
+  templateUrl: './toolbar.component.html',
+  styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent {
   @Output() insertSpeaker = new EventEmitter<{first: string, last: string, favorite: boolean}>();

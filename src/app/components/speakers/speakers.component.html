@@ -1,25 +1,26 @@
 <app-toolbar (insertSpeaker)="onAddSpeaker($event)"></app-toolbar>
-<div class="container show-fav">
+<div class="container-fluid">
   <div class="row">
-    <div class="fav-list">
-      @for (speaker of speakers(); track speaker.id) {
-        <div class="favbox">
-          <div class="fav-clm col-sm-7">
-            <h4>{{speaker.first}} {{speaker.last}} ({{speaker.id}})</h4>
-          </div>
-          <div class="fav-clm col-sm-5">
-            <div class="action">
-              <span (click)="toggleFavorite(+speaker.id)">
-                <div [class]="speaker.favorite ? 'fa fa-star orange' : 'fa fa-star-o orange'"></div>
-                &nbsp;&nbsp; Favorite
-              </span>
-              <span (click)="deleteSpeaker(+speaker.id)">
-                <i class="fa fa-trash red"></i> Delete
-              </span>
+    <div class="col-md-8">
+      <div class="list-group">
+        @for (speaker of speakers(); track speaker.id) {
+          <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+            <div class="ms-2 me-auto">
+              <div class="fw-bold">{{speaker.first}} {{speaker.last}} ({{speaker.id}})</div>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-outline-warning btn-sm me-2" (click)="toggleFavorite(+speaker.id)">
+                <i [class]="speaker.favorite ? 'fa fa-star' : 'fa fa-star-o'"></i>
+                Favorite
+              </button>
+              <button class="btn btn-outline-danger btn-sm" (click)="deleteSpeaker(+speaker.id)">
+                <i class="fa fa-trash"></i>
+                Delete
+              </button>
             </div>
           </div>
-        </div>
-      }
+        }
+      </div>
     </div>
   </div>
 </div>

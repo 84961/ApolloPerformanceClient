@@ -1,10 +1,12 @@
-<div class="toolbar">
-    <div class="add-speaker-form">
-      <input [ngModel]="first()" (ngModelChange)="first.set($event)" placeholder="First Name" />
-      <input [ngModel]="last()" (ngModelChange)="last.set($event)" placeholder="Last Name" />
-      <label>
-        <input type="checkbox" [ngModel]="favorite()" (ngModelChange)="favorite.set($event)" /> Favorite
-      </label>
-      <button (click)="handleAdd()">Add Speaker</button>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand">Speakers Management</span>
+      <div class="navbar-nav ms-auto">
+        <button class="btn btn-primary d-flex align-items-center" (click)="openModal()">
+          <i class="bi bi-plus-lg me-2"></i>
+          Add Speaker
+        </button>
+      </div>
     </div>
-  </div>
+  </nav>
+  <app-add-speaker-modal (insertSpeaker)="onInsertSpeaker($event)"></app-add-speaker-modal>

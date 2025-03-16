@@ -16,3 +16,21 @@
     object-fit: cover;
   }
 }
+
+.list-group {
+  .list-group-item {
+    transition: all 0.2s ease-in-out;
+    
+    &:hover {
+      background-color: rgba(0,0,0,0.02);
+    }
+  }
+}
+
+.fa-star {
+  color: #ffc107;
+}
+
+.fa-star-o {
+  color: #6c757d;
+}
