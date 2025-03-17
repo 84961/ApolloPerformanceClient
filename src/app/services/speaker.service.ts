@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { gql } from 'apollo-angular';
 import { Observable, map, tap } from 'rxjs';
-import { PaginationParams, Speaker, SpeakerInput, SpeakersPaginatedResponse, SpeakersResponse } from '../models/speaker.interface';
+import { PaginationParams, Speaker, SpeakerInput, SpeakersCursorResponse, SpeakersPaginatedResponse, SpeakersResponse } from '../models/speaker.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -42,6 +42,22 @@ export class SpeakerService {
       }
     }
   `;
+   
+  GET_SPEAKERS_CONCAT = gql`
+   query speakersConcat($afterCursor: String, $limit: Int) {
+     speakersConcat(afterCursor: $afterCursor, limit: $limit) {
+       datalist {
+        id
+        first
+        last
+       }
+       pageInfo {
+         hasNextPage
+         lastCursor
+       }
+    }
+  }
+`;
 
 
   private ADD_SPEAKER = gql`
@@ -76,6 +92,18 @@ export class SpeakerService {
       }
     }
   `;
+
+  getSpeakersCursorResponse(afterCursor: string = '', limit: number = 4): Observable<SpeakersCursorResponse> {
+    return this.apollo.watchQuery<SpeakersCursorResponse>({
+      query: this.GET_SPEAKERS_CONCAT,
+      variables: {
+        afterCursor,
+        limit
+      }
+    }).valueChanges.pipe(
+      map(result => result.data)
+    );
+  }
 
   getSpeakers(): Observable<Speaker[]> {
     return this.apollo.watchQuery<SpeakersResponse>({

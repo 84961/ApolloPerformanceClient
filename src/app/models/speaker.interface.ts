@@ -34,3 +34,34 @@ export interface Speaker extends ParentType {
     offset: number;
     limit: number;
   }
+
+  
+  export interface PageInfo {
+    hasNextPage: boolean;
+    lastCursor: string;
+  }
+  
+  export interface SpeakersCursorResponse {
+    speakersConcat: {
+      datalist: Speaker[];
+      pageInfo: PageInfo;
+    };
+  }
+
+  export interface Session {
+    id: string;
+    eventYear: string;
+    title: string;
+  }
+  
+
+  export interface SessionsCursorResponse {
+    sessionsConcat: {
+      datalist: Session[];
+      pageInfo: {
+        hasNextPage: boolean;
+        lastCursor: string;
+      };
+    };
+  }
+  

@@ -1,0 +1,17 @@
+<div class="container show-fav mt-3">
+    <div *ngIf="loading() && !loadingMore()" class="col-sm-6">Loading...</div>
+    <div *ngIf="error()" class="col-sm-6">Error</div>
+
+    <ng-container *ngIf="sessions().length">
+      <div *ngFor="let session of sessions()" class="col-sm-12">
+        {{session.eventYear}} {{session.title}} ({{session.id}})
+      </div>
+
+      <button *ngIf="hasNextPage()"
+              class="btn btn-primary mt-2"
+              (click)="loadMore()"
+              [disabled]="loadingMore()">
+        {{loadingMore() ? 'Loading...' : 'Show More'}}
+      </button>
+    </ng-container>
+  </div>
