@@ -1,29 +1,75 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm mb-4">
+<nav class="navbar navbar-expand-lg shadow-sm mb-4" [class.navbar-dark]="isDarkTheme()" [class.bg-dark]="isDarkTheme()" [class.navbar-light]="!isDarkTheme()" [class.bg-light]="!isDarkTheme()">
   <div class="container-fluid">
-    <span class="navbar-brand">Speakers Management</span>
-    <div class="navbar-nav ms-auto">
+    <span class="navbar-brand fw-bold">
+      <i class="bi bi-people-fill me-2"></i>
+      Speakers Management
+    </span>
+    <div class="d-flex align-items-center gap-3">
+      <!-- Add Speaker Button -->
       <button class="btn btn-primary d-flex align-items-center" (click)="openModal()">
         <i class="bi bi-plus-lg me-2"></i>
         Add Speaker
       </button>
-      &nbsp;
-      <button class="btn btn-info" (click)="onSortByIdDescending()">
-        <span>Sort Speakers By Id Descending</span>
+
+      <!-- Sort Button -->
+      <button class="btn btn-info d-flex align-items-center" (click)="onSortByIdDescending()">
+        <i class="bi bi-sort-numeric-down me-2"></i>
+        Sort by ID
       </button>
-      <div class="d-flex gap-2">
+
+      <!-- Pagination Controls -->
+      <div class="d-flex align-items-center">
+        <select 
+          class="form-select form-select-sm me-2" 
+          style="width: auto;"
+          [ngModel]="itemsPerPage()" 
+          (ngModelChange)="onItemsPerPageChange($event)"
+        >
+          <option [ngValue]="3" selected="true">3 per page</option>
+          <option [ngValue]="5">5 per page</option>
+          <option [ngValue]="10">10 per page</option>
+        </select>
+
+        <nav aria-label="Page navigation">
+          <ul class="pagination pagination-sm mb-0">
+            <li [class.disabled]="currentPage() === 1" class="page-item">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage() - 1)">
+                <i class="bi bi-chevron-left"></i>
+              </a>
+            </li>
+            <li class="page-item">
+              <span class="page-link">
+                Page {{ currentPage() }} of {{ totalPages() }}
+              </span>
+            </li>
+            <li [class.disabled]="currentPage() >= totalPages()" class="page-item">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage() + 1)">
+                <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <!-- Theme and Selection Controls -->
+      <div class="btn-group">
         <button 
           class="btn" 
-          [class.btn-outline-dark]="!isDarkTheme()"
           [class.btn-outline-light]="isDarkTheme()"
-          (click)="toggleAllSpeakers()">
+          [class.btn-outline-dark]="!isDarkTheme()"
+          (click)="toggleAllSpeakers()"
+        >
+          <i [class]="isAllSelected() ? 'bi bi-check-square' : 'bi bi-square'" class="me-1"></i>
           {{ isAllSelected() ? 'Uncheck All' : 'Check All' }}
         </button>
         <button 
           class="btn" 
-          [class.btn-dark]="!isDarkTheme()"
           [class.btn-light]="isDarkTheme()"
-          (click)="toggleTheme()">
-          {{ isDarkTheme() ? '☀️ Light' : '🌙 Dark' }}
+          [class.btn-dark]="!isDarkTheme()"
+          (click)="toggleTheme()"
+        >
+          <i [class]="isDarkTheme() ? 'bi bi-sun' : 'bi bi-moon'" class="me-1"></i>
+          {{ isDarkTheme() ? 'Light' : 'Dark' }}
         </button>
       </div>
     </div>

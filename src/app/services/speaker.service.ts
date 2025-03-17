@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { gql } from 'apollo-angular';
 import { Observable, map, tap } from 'rxjs';
-import { Speaker, SpeakerInput, SpeakersResponse } from '../models/speaker.interface';
+import { PaginationParams, Speaker, SpeakerInput, SpeakersPaginatedResponse, SpeakersResponse } from '../models/speaker.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +24,25 @@ export class SpeakerService {
       }
     }
   `;
+
+  GET_SPEAKERS_OFFSET_PAGINATED = gql`
+    query GetSpeakersOffsetPaginated($offset: Int, $limit: Int) {
+      speakers(offset: $offset, limit: $limit) {
+        datalist {
+          id
+          first
+          last
+          favorite
+          fullName @client
+          checkBoxColumn @client
+        }
+        pageInfo {
+          totalItemCount
+        }
+      }
+    }
+  `;
+
 
   private ADD_SPEAKER = gql`
     mutation AddSpeaker($first: String, $last: String, $favorite: Boolean) {
@@ -63,6 +82,18 @@ export class SpeakerService {
       query: this.GET_SPEAKERS
     }).valueChanges.pipe(
       map(({ data }) => data.speakers.datalist)
+    );
+  }
+
+  getSpeakersOffsetPaginated(params: PaginationParams): Observable<SpeakersPaginatedResponse> {
+    return this.apollo.watchQuery<SpeakersPaginatedResponse>({
+      query: this.GET_SPEAKERS_OFFSET_PAGINATED,
+      variables: {
+        offset: params.offset,
+        limit: params.limit
+      }
+    }).valueChanges.pipe(
+      map(result => result.data)
     );
   }
 

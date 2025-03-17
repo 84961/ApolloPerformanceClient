@@ -21,3 +21,16 @@ export interface Speaker extends ParentType {
     last: string;
     favorite: boolean;
   }
+
+  export interface SpeakersPaginatedResponse {
+    speakers: {
+      datalist: Speaker[];
+      pageInfo: {
+        totalItemCount: number;
+      };
+    };
+  }
+  export interface PaginationParams {
+    offset: number;
+    limit: number;
+  }

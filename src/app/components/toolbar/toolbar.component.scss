@@ -8,3 +8,29 @@
     gap: 1rem;
     align-items: center;
   }
+
+  .speaker-card {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .pagination {
+    margin-top: 2rem;
+  }
+  
+  .toolbar-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .page-link {
+    cursor: pointer;
+  }
+  
+  .page-item.disabled .page-link {
+    cursor: not-allowed;
+  }

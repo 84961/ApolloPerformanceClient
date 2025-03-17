@@ -1,6 +1,6 @@
-import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef, computed, effect } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { map, tap, combineLatest } from 'rxjs';
+import { map, tap, combineLatest, switchMap } from 'rxjs';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 import { SpeakerService } from '../../services/speaker.service';
@@ -24,49 +24,67 @@ export class SpeakerComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   protected speakers = signal<Speaker[]>([]);
 
+  limit = signal(3);
+  currentPage = signal(1);
+  searchQuery = signal('');
+
+  private params = computed(() => ({
+    offset: (this.currentPage() - 1) * this.limit(),
+    limit: this.limit()
+  }));
+
+  private watchQuery = computed(() => ({
+    query: this.speakerService.GET_SPEAKERS_OFFSET_PAGINATED,
+    variables: this.params(),
+    fetchPolicy: 'cache-and-network' as const
+  }));
+
+  totalItems = signal(0);
+
+
   constructor() {
     console.log('SpeakerComponent constructor initialized');
-  }
-  
-  ngOnInit() {
-    console.log('SpeakerComponent ngOnInit started');
-    
-    // Watch both speakers data and checkbox selections
-    combineLatest([
-      this.speakerService.watchSpeakers(),
-      this.apollo.watchQuery<any>({
-        query: gql`
-          query WatchSelections {
-            selectedSpeakers @client
-          }
-        `
-      }).valueChanges
-    ]).pipe(
-      map(([speakers, { data }]) => {
-        return speakers.map(speaker => ({
-          ...speaker,
-          checkBoxColumn: (data.selectedSpeakers || []).includes(Number(speaker.id))
-        }));
-      }),
-      tap(speakers => {
-        console.log('Combined speakers with selections:', speakers);
-        if (!speakers || speakers.length === 0) {
-          console.warn('No speakers data received');
-          this.apolloService.updateAllSpeakerIds([]);
-        }
-      }),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe({
-      next: (speakers) => {
-        this.speakers.set(speakers);
-        this.apolloService.updateAllSpeakerIds(speakers.map(s => s.id));
-        console.log('Updated speakers signal:', this.speakers());
-      },
-      error: (error) => console.error('Subscription error:', error)
+
+    // Add effect to watch pagination changes
+    effect(() => {
+      console.log('Pagination params changed:', this.params());
+
+      this.apollo.watchQuery<any>(this.watchQuery())
+        .valueChanges
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: ({ data }) => {
+            if (data?.speakers) {
+              console.log('New page data:', data.speakers);
+              this.speakers.set(data.speakers.datalist);
+              this.totalItems.set(data.speakers.pageInfo.totalItemCount);
+              //this.apolloService.updateAllSpeakerIds(data.speakers.datalist.map(s => s.id));
+            }
+          },
+          error: (error) => console.error('Pagination query error:', error)
+        });
     });
   }
 
-  onAddSpeaker(data: {first: string, last: string, favorite: boolean}) {
+  ngOnInit() {
+    console.log('SpeakerComponent ngOnInit started');
+  }
+
+  onPageChange(page: number) {
+    if (page >= 1 && page <= this.totalItems()) {
+
+      console.log('Changing to page:', page);
+      this.currentPage.set(page);
+      // params() will update automatically, triggering a new query
+    }
+  }
+
+  onItemsPerPageChange(items: number) {
+    this.limit.set(items);
+    this.currentPage.set(1);
+  }
+
+  onAddSpeaker(data: { first: string, last: string, favorite: boolean }) {
     const speakerInput: SpeakerInput = {
       first: data.first,
       last: data.last,
@@ -77,22 +95,22 @@ export class SpeakerComponent implements OnInit {
       .subscribe();
   }
 
-  onAddSpeakerOptimistic(data: {first: string, last: string, favorite: boolean}) {
-    const speakerInput: SpeakerInput = {  
+  onAddSpeakerOptimistic(data: { first: string, last: string, favorite: boolean }) {
+    const speakerInput: SpeakerInput = {
       first: data.first,
       last: data.last,
       favorite: data.favorite
     };
     this.speakerService.addSpeakerOptimistic(speakerInput)
-    .pipe(takeUntilDestroyed(this.destroyRef))
-    .subscribe();
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
   }
   toggleFavorite(id: number) {
     this.speakerService.toggleFavorite(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(updatedSpeaker => {
         const currentSpeakers = this.speakers();
-        const updatedSpeakers = currentSpeakers.map(speaker => 
+        const updatedSpeakers = currentSpeakers.map(speaker =>
           speaker.id === updatedSpeaker.id ? updatedSpeaker : speaker
         );
         this.speakers.set(updatedSpeakers);
@@ -104,7 +122,7 @@ export class SpeakerComponent implements OnInit {
     const currentSpeakers = this.speakers();
     console.log('Current speakers array:', currentSpeakers); // Debug the current speakers array
     console.log('Looking for speaker with ID:', id); // Debug the ID we're looking for
-    
+
     const speaker = currentSpeakers.find(s => {
       console.log('Comparing speaker:', s.id, 'with:', id, 'types:', typeof s.id, typeof id);
       return Number(s.id) === Number(id);
@@ -136,7 +154,7 @@ export class SpeakerComponent implements OnInit {
   deleteSpeakerOptimistic(id: number) {
     const currentSpeakers = this.speakers();
     const speaker = currentSpeakers.find(s => Number(s.id) === Number(id));
-    
+
     if (speaker) {
       console.log('Deleting speaker:', speaker);
       this.speakerService.deleteSpeakerOptimistic(Number(id), speaker)
@@ -153,7 +171,7 @@ export class SpeakerComponent implements OnInit {
     }
   }
 
-  onSortByIdDescending(){
+  onSortByIdDescending() {
     this.speakerService.sortSpeakersDescending();
   }
 

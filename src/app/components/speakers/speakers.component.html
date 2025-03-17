@@ -1,4 +1,10 @@
-<app-toolbar (insertSpeaker)="onAddSpeakerOptimistic($event)" (sortByIdDescending)="onSortByIdDescending()"></app-toolbar>
+<app-toolbar (insertSpeaker)="onAddSpeakerOptimistic($event)" (sortByIdDescending)="onSortByIdDescending()"
+[currentPage]="currentPage()"
+[totalItems]="totalItems()"
+[itemsPerPage]="limit()"
+(pageChange)="onPageChange($event)"
+(itemsPerPageChange)="onItemsPerPageChange($event)"
+></app-toolbar>
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-8">
@@ -6,8 +12,6 @@
         @for (speaker of speakers(); track speaker.id) {
           <div class="list-group-item d-flex justify-content-between align-items-center p-3">
             <div class="ms-2 me-auto">
-              <!-- <div class="fw-bold">{{speaker.first}} {{speaker.last}} ({{speaker.id}})</div>
-            </div> -->
             <div class="form-check">
                 <input 
                   class="form-check-input" 
