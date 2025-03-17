@@ -35,4 +35,42 @@
   .red {
     color: red;
   }
+
+// Theme styles
+body {
+  transition: background-color 0.3s, color 0.3s;
   
+  &.dark-theme {
+    background-color: #212529;
+    color: #f8f9fa;
+
+    .list-group-item {
+      background-color: #343a40;
+      border-color: #495057;
+      color: #f8f9fa;
+    }
+
+    .navbar {
+      background-color: #343a40 !important;
+      border-color: #495057;
+
+      .navbar-brand {
+        color: #f8f9fa;
+      }
+    }
+
+    .btn-outline-warning {
+      color: #ffc107;
+      &:hover {
+        color: #212529;
+      }
+    }
+
+    .btn-outline-danger {
+      color: #dc3545;
+      &:hover {
+        color: #fff;
+      }
+    }
+  }
+}

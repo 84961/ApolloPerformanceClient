@@ -1,10 +1,14 @@
 import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { tap } from 'rxjs';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { map, tap, combineLatest } from 'rxjs';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 import { SpeakerService } from '../../services/speaker.service';
 import { Speaker, SpeakerInput } from '../../models/speaker.interface';
+import { ApolloService } from '../../services/apollo-service';
+import { checkBoxListVar } from '../../graphql/reactive-variables';
+import { Apollo } from 'apollo-angular';
+import { gql } from 'apollo-angular';
 
 @Component({
   selector: 'app-speaker',
@@ -14,28 +18,52 @@ import { Speaker, SpeakerInput } from '../../models/speaker.interface';
   styleUrls: ['./speakers.component.scss']
 })
 export class SpeakerComponent implements OnInit {
+  private apollo = inject(Apollo);
   protected speakerService = inject(SpeakerService);
+  private apolloService = inject(ApolloService);
   private destroyRef = inject(DestroyRef);
   protected speakers = signal<Speaker[]>([]);
 
+  constructor() {
+    console.log('SpeakerComponent constructor initialized');
+  }
+  
   ngOnInit() {
-    this.speakerService.watchSpeakers()
-      .pipe(
-        tap(speakers => {
-          console.log('Raw speakers data:', speakers); // Debug the raw data
-          if (!speakers || speakers.length === 0) {
-            console.warn('No speakers data received');
+    console.log('SpeakerComponent ngOnInit started');
+    
+    // Watch both speakers data and checkbox selections
+    combineLatest([
+      this.speakerService.watchSpeakers(),
+      this.apollo.watchQuery<any>({
+        query: gql`
+          query WatchSelections {
+            selectedSpeakers @client
           }
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe({
-        next: (speakers) => {
-          this.speakers.set(speakers);
-          console.log('Speakers signal after update:', this.speakers()); // Verify signal update
-        },
-        error: (error) => console.error('Error loading speakers:', error)
-      });
+        `
+      }).valueChanges
+    ]).pipe(
+      map(([speakers, { data }]) => {
+        return speakers.map(speaker => ({
+          ...speaker,
+          checkBoxColumn: (data.selectedSpeakers || []).includes(Number(speaker.id))
+        }));
+      }),
+      tap(speakers => {
+        console.log('Combined speakers with selections:', speakers);
+        if (!speakers || speakers.length === 0) {
+          console.warn('No speakers data received');
+          this.apolloService.updateAllSpeakerIds([]);
+        }
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (speakers) => {
+        this.speakers.set(speakers);
+        this.apolloService.updateAllSpeakerIds(speakers.map(s => s.id));
+        console.log('Updated speakers signal:', this.speakers());
+      },
+      error: (error) => console.error('Subscription error:', error)
+    });
   }
 
   onAddSpeaker(data: {first: string, last: string, favorite: boolean}) {
@@ -127,5 +155,34 @@ export class SpeakerComponent implements OnInit {
 
   onSortByIdDescending(){
     this.speakerService.sortSpeakersDescending();
+  }
+
+  toggleSpeaker(id: number) {
+    try {
+      const currentList = checkBoxListVar().map(x => Number(x));
+      const numericId = Number(id);
+
+      if (isNaN(numericId)) {
+        console.error('Invalid speaker ID:', id);
+        return;
+      }
+
+      if (currentList.includes(numericId)) {
+        checkBoxListVar(currentList.filter(x => x !== numericId));
+      } else {
+        checkBoxListVar([...currentList, numericId]);
+      }
+
+      // Force cache refresh for the specific speaker
+      this.apollo.client.cache.modify({
+        id: this.apollo.client.cache.identify({ __typename: 'Speaker', id: numericId }),
+        fields: {
+          checkBoxColumn: (existing) => !existing
+        }
+      });
+
+    } catch (error) {
+      console.error('Error toggling speaker selection:', error);
+    }
   }
 }

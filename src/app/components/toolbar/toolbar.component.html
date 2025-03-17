@@ -10,6 +10,22 @@
       <button class="btn btn-info" (click)="onSortByIdDescending()">
         <span>Sort Speakers By Id Descending</span>
       </button>
+      <div class="d-flex gap-2">
+        <button 
+          class="btn" 
+          [class.btn-outline-dark]="!isDarkTheme()"
+          [class.btn-outline-light]="isDarkTheme()"
+          (click)="toggleAllSpeakers()">
+          {{ isAllSelected() ? 'Uncheck All' : 'Check All' }}
+        </button>
+        <button 
+          class="btn" 
+          [class.btn-dark]="!isDarkTheme()"
+          [class.btn-light]="isDarkTheme()"
+          (click)="toggleTheme()">
+          {{ isDarkTheme() ? '☀️ Light' : '🌙 Dark' }}
+        </button>
+      </div>
     </div>
   </div>
 </nav>

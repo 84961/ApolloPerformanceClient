@@ -17,6 +17,8 @@ export class SpeakerService {
           id
           first
           last
+          fullName @client
+          checkBoxColumn @client
           favorite
         }
       }
@@ -222,12 +224,17 @@ export class SpeakerService {
   }
 
   watchSpeakers(): Observable<Speaker[]> {
+    console.log('Initiating watchSpeakers query');
     return this.apollo.watchQuery<SpeakersResponse>({
       query: this.GET_SPEAKERS,
-      fetchPolicy: 'cache-and-network', // Ensures immediate emission of cached data
-      nextFetchPolicy: 'cache-first'
+      fetchPolicy: 'network-only', // Force network request on first call
+      nextFetchPolicy: 'cache-first', // Use cache for subsequent updates
+      notifyOnNetworkStatusChange: true // Get notified of loading states
     }).valueChanges.pipe(
-      tap(response => console.log('GraphQL response:', response)), // Debug log
+      tap(response => {
+        console.log('Apollo response:', response);
+        console.log('Network status:', response.networkStatus);
+      }),
       map(({ data }) => data.speakers.datalist)
     );
   }

@@ -5,6 +5,8 @@ export interface Speaker extends ParentType {
     id: number;
     first: string;
     last: string;
+    fullName?: string;
+    checkBoxColumn?: boolean;
     favorite: boolean;
   }
   
