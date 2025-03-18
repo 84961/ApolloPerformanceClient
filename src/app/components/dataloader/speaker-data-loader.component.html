@@ -1,0 +1,17 @@
+<section class="speakers">
+    <div class="container">
+      <div class="row">
+        <div class="speakers-list">
+          @if (loading()) {
+            <div>Loading...</div>
+          } @else if (error()) {
+            <div class="col-sm-6">Error</div>
+          } @else {
+            @for (speaker of speakers(); track speaker.id) {
+              <app-speaker-card [speaker]="speaker" />
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </section>
